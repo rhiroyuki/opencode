@@ -41,6 +41,7 @@ type MessagesComponent interface {
 	UndoLastMessage() (tea.Model, tea.Cmd)
 	RedoLastMessage() (tea.Model, tea.Cmd)
 	ScrollToMessage(messageID string) (tea.Model, tea.Cmd)
+	AggregateVisibleContent() string
 }
 
 type messagesComponent struct {
@@ -62,6 +63,24 @@ type messagesComponent struct {
 	messagePositions   map[string]int // map message ID to line position
 	animating          bool
 }
+
+// AggregateVisibleContent returns all currently visible messages as a single string, preserving formatting.
+func (m *messagesComponent) AggregateVisibleContent() string {
+	// Use the same logic as renderView, but just aggregate the visible blocks as plain text (strip ANSI)
+	blocks := make([]string, 0)
+	for _, message := range m.app.Messages {
+		for _, part := range message.Parts {
+			switch p := part.(type) {
+			case opencode.TextPart:
+				if p.Text != "" {
+					blocks = append(blocks, p.Text)
+				}
+			}
+		}
+	}
+	return strings.Join(blocks, "\n\n")
+}
+
 
 type selection struct {
 	startX int
@@ -1286,6 +1305,9 @@ func (m *messagesComponent) ScrollToMessage(messageID string) (tea.Model, tea.Cm
 	}
 	return m, nil
 }
+
+// Ensure interface compliance
+var _ MessagesComponent = (*messagesComponent)(nil)
 
 func NewMessagesComponent(app *app.App) MessagesComponent {
 	vp := viewport.New()

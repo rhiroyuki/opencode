@@ -193,6 +193,12 @@ func parseBindings(bindings ...string) []Keybinding {
 func LoadFromConfig(config *opencode.Config, customCommands []opencode.Command) CommandRegistry {
 	defaults := []Command{
 		{
+			Name:        "copy_session",
+			Description: "copy all visible messages in the session to the clipboard",
+			Trigger:     []string{"copy_session"},
+			Custom:      true,
+		},
+		{
 			Name:        AppHelpCommand,
 			Description: "show help",
 			Keybindings: parseBindings("<leader>h"),

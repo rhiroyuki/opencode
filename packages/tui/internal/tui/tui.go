@@ -1538,7 +1538,7 @@ func NewModel(app *app.App) tea.Model {
 	agentsProvider := completions.NewAgentsContextGroup(app)
 
 	messages := chat.NewMessagesComponent(app)
-	editor := chat.NewEditorComponent(app)
+	editor := chat.NewEditorComponent(app, messages)
 	completions := dialog.NewCompletionDialogComponent("/", commandProvider)
 
 	var leaderBinding *key.Binding

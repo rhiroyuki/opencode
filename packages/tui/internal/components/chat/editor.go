@@ -52,6 +52,7 @@ type EditorComponent interface {
 
 type editorComponent struct {
 	app                    *app.App
+	Messages               MessagesComponent
 	width                  int
 	textarea               textarea.Model
 	spinner                spinner.Model
@@ -477,6 +478,21 @@ func (m *editorComponent) Submit() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// Handle special commands
+	if strings.EqualFold(value, "/copy_session") {
+		if m.Messages != nil {
+			copyContent := m.Messages.AggregateVisibleContent()
+			if len(copyContent) > 100_000_000 {
+				return m, toast.NewErrorToast("Session too large to copy (over 100MB)")
+			}
+			return m, tea.Batch(
+				app.SetClipboard(copyContent),
+				toast.NewSuccessToast("Session copied to clipboard!"),
+			)
+		}
+		return m, toast.NewErrorToast("Unable to copy session: messages not available")
+	}
+
 	switch value {
 	case "exit", "quit", "q", ":q":
 		return m, tea.Quit
@@ -759,7 +775,7 @@ func createSpinner() spinner.Model {
 	)
 }
 
-func NewEditorComponent(app *app.App) EditorComponent {
+func NewEditorComponent(app *app.App, messages MessagesComponent) EditorComponent {
 	s := createSpinner()
 
 	ta := textarea.New()
@@ -771,6 +787,7 @@ func NewEditorComponent(app *app.App) EditorComponent {
 
 	m := &editorComponent{
 		app:                    app,
+		Messages:               messages,
 		textarea:               ta,
 		spinner:                s,
 		interruptKeyInDebounce: false,
